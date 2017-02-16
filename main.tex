@@ -9,6 +9,7 @@
 \usepackage{float}
 \restylefloat{figure}
 \usepackage{subfig}
+\usepackage{amssymb}
 
 \usepackage[top=1.0in,bottom=1in,right=.5in,left=.5in,headheight=50pt,headsep=0.5cm]{geometry}
 \usepackage{siunitx}
@@ -17,7 +18,7 @@
 \usepackage{verbatim}
 \usepackage{tipa}
 \usepackage{fancyhdr}
-\usepackage{enumerate}
+\usepackage{enumitem}
 \usepackage{color}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
@@ -43,7 +44,7 @@
 \pagestyle{fancy}
 \fancyhf{}
 \rhead{Bruce Goldfeder}
-\lhead{CSI 674 HW \#8}
+\lhead{CSI 758 Spring 2017 HW \#1}
 \cfoot{Page \thepage}
 \usepackage{sectsty}
 \newcommand{\Rho}{\mathrm{P}}
@@ -52,7 +53,7 @@
 
 \subsectionfont{\fontsize{12}{15}\selectfont}
 
-\title{CSI 674 Spring 2016 HW\#8}
+\title{CSI 758 Spring 2017 HW\#1}
 
 \author{Bruce Goldfeder}
 
@@ -65,101 +66,260 @@
 \maketitle
 \NumTabs{12}
 
-\begin{figure}[H]
-\begin{flushleft}
-\includegraphics[scale=.9]{HW8Q1.png}
-\end{flushleft}
+1.	Load the image bird.jpg. Create a new image in which the red channel data is placed in the green channel, the green channel information is placed in the blue channel, and the blue channel information is placed in the red channel. Show your code and paste your result.\\
+
+The following code reads in the bird.jpg image, then performs a self transpose which creates three arrays of red, green, and blue.  I then build an empty zeros matrix of the same dimensions as the original and put each color band in the reordered sequence.  The code is shown below:
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 13 19:58:50 2017
+
+@author: bruce
+"""
+
+import scipy.misc as sm
+import numpy as np
+
+# Question #1 channel switch - red to green, green to blue, blue to red
+# read in the image bird.jpg
+bdata = sm.imread("bird.jpg")
+bdata.shape
+
+x,y,rgb = bdata.shape
+
+red,green,blue = bdata.T
+sm.imsave('r.png', red )
+sm.imsave('g.png', green )
+sm.imsave('b.png', blue )
+
+c = np.zeros( (y,x,rgb) ) 
+c[:,:,0] = blue
+c[:,:,1] = red
+c[:,:,2] = green
+ 
+ct = np.transpose(c,axes=(1,0,2))
+
+sm.imsave("gbr.jpg",ct)
+\end{lstlisting}
+The images are shown below:\\
+
+\begin{figure}[ht!]%
+    \centering
+    \subfloat[Original Image]{{\includegraphics[width=5cm]{bird.jpg} }}%
+    \qquad
+    \subfloat[GBR Image]{{\includegraphics[width=5cm]{gbr.jpg} }}%
+    \caption{Original and GBR images side by side}%
+    \label{fig:example}%
 \end{figure}
-\squeezeup
-\squeezeup
-\squeezeup
 
-\hspace{1cm} Given the assumptions of an unknown diet-specific mean and a common standard deviation I created the model below.  The model is normal / normal.
+2.	Write the notation for the following situation. Load the bird image, replace the red channel with the square root of the red channel values, replace the blue channel with the square of the blue channel values, and keep the green channel unchanged.\\
 
+Read in the file:\\
+$ \boldsymbol{a}[\vec{x}]$ = bird.jpg\\\\
+Use Channel Separation to access individual channels:\\
+$
+\begin{Bmatrix} 
+\boldsymbol{R}[\vec{x}]\\ 
+\boldsymbol{G}[\vec{x}] \\ 
+\boldsymbol{B}[\vec{x}]  
+\end{Bmatrix} = \boldsymbol{a}[\vec{x}]$  \\\\
+Replace the red channel with the square root of the red channel values\\\\
+$\boldsymbol{b}[\vec{x}] =
+\begin{Bmatrix} 
+\sqrt{\boldsymbol{R}[\vec{x}]}\\ 
+\boldsymbol{G}[\vec{x}] \\ 
+\sqrt{\boldsymbol{B}[\vec{x}]}  
+\end{Bmatrix}$ \\ 
 
-\begin{figure}[H]
-\begin{flushleft}
-\includegraphics[scale=.9]{hierarchicalQ1d.png}
-\end{flushleft}
-\end{figure}
+\vspace{5mm}
 
+3.	Write a script to convert the bird image to gray scale, find the maximum value, and the location(s) of the maximum.\\
+Code is below:
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb 15 19:45:16 2017
 
-\begin{figure}[H]
-\begin{flushleft}
-\includegraphics[scale=.9]{HW8Q2.png}
-\end{flushleft}
-\end{figure}
-I ran the hierarchical bayes using the empirical bayes prior distribution using a loop over the sample values and updating $\mu$ and $\tau$ after each posterior is estimated.  The result was a N(87.25,2.28) with a 95\% credible interval of [82.77,91.73].  The following code was used to determine these values.
-\lstinputlisting{HW8Q2.R}
+@author: bruce
+"""
 
+import scipy.misc as sm
+import numpy as np
+from scipy.ndimage import label
 
-\begin{figure}[H]
-\begin{flushleft}
-\includegraphics[scale=.9]{HW8Q3.png}
-\end{flushleft}
-\end{figure}
-I added the following code to solve for the $\Theta_i$ - $\Theta_j$ where i>j.
+# Question #1 channel switch - red to green, green to blue, blue to red
+# read in the image bird.jpg
+bdata = sm.imread("bird.jpg",flatten=True)
+bdata.shape
+
+intdata = bdata.astype(int)
+theMax = intdata.max()
+
+adata = (intdata == 255)
+b,n = label(adata)
+c,d = np.nonzero(b)
+
+maxList = np.column_stack([c,d])
+np.set_printoptions(threshold=np.inf)
+print(maxList)
+np.set_printoptions(threshold=None)
+sm.imsave("whites.png",adata)
+\end{lstlisting}
+The maximum value came to 255 (after casting to int).
+The array of max values is as follows:
 \begin{verbatim}
-diffs <- c(6)
-labs <- c(6)
-
-diff_n_labs <- data.frame(labs,diffs)
-
-cnt = 1
-for (i in 1:4) {
-  for (j in 1:4) {
-    if (i>j) {
-      label <- paste(i,",",j)
-      #print (label)
-      diff_n_labs[cnt,1] <- label
-      diff_n_labs[cnt,2] <- postThetas[i]-postThetas[j]
-      cnt = cnt + 1
-    }
-  }
-}
+[[ 40 326]
+ [ 45 261]
+ [ 46 260]
+ [ 78 272]
+ [ 80 273]
+ [ 81 266]
+ [ 85 259]
+ [ 85 260]
+ [ 87 283]
+ [ 88 260]
+ [ 88 268]
+ [ 90 294]
+ [ 90 297]
+ [ 91 286]
+ [ 91 444]
+ [100 407]
+ [110 396]
+ [111 405]
+ [116 401]
+ [121 397]
+ [143  33]
+ [169 528]
+ [227 554]
+ [330 379]
+ [339 170]
+ [340 485]
+ [355 594]
+ [412 273]]
 \end{verbatim}
-
-This resulted in the following output:
-\begin{verbatim}
-> diff_n_labs
-   labs      diffs
- 2 , 1  8.3593657
- 3 , 1  6.7083569
- 3 , 2 -1.6510088
- 4 , 1  6.2965797
- 4 , 2 -2.0627861
- 4 , 3 -0.4117772
-\end{verbatim}
-I plotted these below:
+Presented in image form here are where the 27, pixels with value of 255 are.
 \begin{figure}[H]
 \begin{flushleft}
-\includegraphics[scale=.9]{q3.png}
+\includegraphics[scale=.8]{whites.png}
 \end{flushleft}
 \end{figure}
-As expected the variance gets smaller and smaller until the difference is minimized for the fourth iteration minus the third.  This is consistent with the precision values which also get progressively smaller and the mean approaches the aggregate mean.
-\begin{comment}
 
-\begin{flushleft}
-% QUESTION #4
-4. Assume the $\mu,\tau,$ and $\sigma$ are independent; $\mu$ has an improper normal prior distribution with mean 0 and standard deviation $\infty$ (a uniform distribution); and $\tau$ and $\sigma$ have improper Gamma distributions with shape 0 and scale $\infty$.  Use Gibbs sampling to draw 10,000 samples from the joint posterior distribution on $\mu, \tau,$ and $\sigma$.\\
-\medskip
-\hspace{1cm}The answer to this question\\
+4.	Use the geos.png image. Use the ndimage.label function to isolate the objects. Then find the center of mass of the largest circle.\\
+Code is below:
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb 15 21:34:59 2017
 
-\bigskip
-% QUESTION #5
-5. Do a tracelplot and plot the autocorrelation function of your samples.  On the basis of these plots, do you think it is necessary to discard a burn-in period?  Do you think you should do thinning?  Discuss.\\
-\medskip
-\hspace{1cm}The answer to this question\\
+@author: bruce
+"""
+
+import scipy.misc as sm
+import numpy as np
+import scipy.ndimage as nd
+
+# Question #1 channel switch - red to green, green to blue, blue to red
+# read in the image bird.jpg
+bdata = sm.imread("geos.png")
+bdata.shape
+
+adata = (bdata < 255 )
+b,n = nd.label( adata )
+#c,d = np.nonzero(b)
+#shapeList = np.column_stack([c,d])
+c = (b == 4)
+sm.imsave("bigC.png",c)
+
+com = nd.center_of_mass(c)
+
+print(com)
+\end{lstlisting}
+
+The label function provided isolation of the 5 shapes and selecting where the value was equal to 4 gave me the big circle.  The center of mass calculation came to (350.0, 300.0).  I saved these off as the images below:
+\begin{figure}[ht!]%
+    \centering
+    \subfloat[Isolation using label]{{\includegraphics[width=5cm]{foo.png} }}%
+    \qquad
+    \subfloat[selected big circle]{{\includegraphics[width=5cm]{bigC.png} }}%
+    \caption{Isolation and Selection}%
+    \label{fig:example}%
+\end{figure}
+
+5.	Write the operator notation for the following actions:
+\begin{enumerate}[label=(\alph*),leftmargin=2\parindent]
+\item Start with a color image $ \boldsymbol{a}[\vec{x}]$. This has values ranging from 0 to 255. This size of the image frame is V×H.
+\item	Convert to a gray scale image.
+\item	Smooth this image with a smoothing factor of 2.
+\item	Change all values less than 5 to 0. (noise removal)
+\item	Find the center of mass.
+\item	Move the image so that the center of mass is in the center of the frame.
+\item	Rotate the image by 20 degrees.
+\end{enumerate}
+a. Read in the image as $ \boldsymbol{a}[\vec{x}]$ with dimensions V x H\\
+b. Area A = V x H\\
+c. Use Color Transformation where $n$, the model is L (gray scale) $ \boldsymbol{b}[\vec{x}] = \mathcal{L}_n\boldsymbol{a}[\vec{x}]$ this creates a gray scale image.\\
+d. Smooth using a factor of 2, $ \boldsymbol{c}[\vec{x}] = 
+S_2\boldsymbol{b}[\vec{x}]$ \\
+e. Use a Threshold operator to remove values less than 5, $ \boldsymbol{d}[\vec{x}] = \Gamma_{<5}\boldsymbol{c}[\vec{x}]$ \\
+f. Find the center of mass, $ [\vec{v}] = \boxtimes \boldsymbol{d}[\vec{x}]$, then use Plop to make this the new center,  $ \boldsymbol{e}[\vec{x}] = U_{[\vec{v}]}\boldsymbol{d}[\vec{x}]$ \\
+g. Rotate the image by 20 degrees, $ \boldsymbol{f}[\vec{x}] = R_{20,[\vec{v}]}\boldsymbol{e}[\vec{x}]$ \\
 
 
-\bigskip
-% QUESTION #6
-6. Use your sample to evaluate whether there are differences in the four weight gains, and if so, the size of the difference.  Discuss.\\
-\medskip
-\hspace{1cm}The answer to this question
 
 
-\end{flushleft}
-\end{comment}
+
+6.	Load the bird image and call this image $ \boldsymbol{a}[\vec{x}]$ Create an image of a solid circle (use the Circle function) that is in a frame that is the same size as the original image. The circle should be located and sized such that it encompasses the whole bird head. (You may want to use anther program such as Gimp to determine the location and size of this circle.)  Smooth this circle so that the middle still has pixel values of 1 or very nearly 1 and the outer 10 (or so) pixels smoothly go from values of about 1 to about 0. Call this image b[x]. Create a new image from $ \boldsymbol{c}[\vec{x}]= \boldsymbol{a}[\vec{x}] \times \boldsymbol{b}[\vec{x}]$.\\\\
+Using Gimp, I opened up the "pointer" dialog box to give me the x,y coords of where the pointer was at.  I found the smallest circle that would cover the parrot's head by finding the vertical top and vertical bottom of the face of the parrot.  These coordinates came to [270,90] to [270,160].  From this I used your mgcreate code to make the circle, then scipy.signal.cspline2d to smooth the edge.  Then I copied this 2D mask three times into a 3D matrix of zeros and multiplied this with the original image.  Now I have a cool parrot head with fuzzy edges! Fun!\\
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Feb 15 22:30:07 2017
+
+@author: bruce
+"""
+
+import scipy.misc as sm
+import scipy.signal as sg
+import numpy as np
+import mgcreate as mg
+
+
+# Question #1 channel switch - red to green, green to blue, blue to red
+# read in the image bird.jpg
+bdata = sm.imread("bird.jpg")
+bdata.shape
+
+mask = mg.Circle((519,653),(125,270),35)
+
+b = sg.cspline2d(mask,1000)
+sm.imsave("mask.png",b)
+
+w, h = b.shape
+mask3d = np.zeros((w, h, 3))
+mask3d[:, :, 0] = b
+mask3d[:, :, 1] = b
+mask3d[:, :, 2] = b
+
+sm.imsave("mask3d.png",mask3d)
+     
+maskParrot = bdata * mask3d
+      
+sm.imsave("maskParrot.png",maskParrot)
+\end{lstlisting}
+Here are the images of the original, the smoothed mask, and the final output
+\begin{figure}[ht!]%
+    \centering
+    \subfloat[Original Image]{{\includegraphics[width=5cm]{bird.jpg} }}%
+    \qquad
+    \subfloat[Mask with smoothing]{{\includegraphics[width=5cm]{mask3d.png} }}%
+    \qquad
+    \subfloat[Multiplication of two images]{{\includegraphics[width=5cm]{maskParrot.png} }}%
+    \caption{Fuzzy Edged Parrot Head}%
+    \label{fig:example}%
+\end{figure}
+
+
+
+
 
 \end{document}
